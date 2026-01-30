@@ -133,8 +133,13 @@
     <div class="subtitle">Klik produk untuk auto pilih di form</div>
 
     <div class="section">
-      <div class="section-title">Heartopia Products</div>
-      <ul class="pricelist" id="listProducts"></ul>
+      <div class="section-title">Heart Diamonds</div>
+      <ul class="pricelist" id="listDiamonds"></ul>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Membership (GAMG)</div>
+      <ul class="pricelist" id="listMembership"></ul>
     </div>
 
     <div class="section">
@@ -174,74 +179,29 @@
       return 'Rp ' + numberString.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
     }
 
-    // RULES MARKUP (UPDATED)
-    function calcMarkup(basePrice) {
-      if (basePrice > 0 && basePrice < 16000) return 800;
-
-      if (basePrice >= 16000 && basePrice <= 50000) {
-        var m2 = Math.round(basePrice * 0.05);
-        return Math.min(m2, 1200);
-      }
-
-      if (basePrice > 50000 && basePrice <= 140000) {
-        var m3 = Math.round(basePrice * 0.033);
-        return Math.min(m3, 2000);
-      }
-
-      if (basePrice > 140000 && basePrice <= 300000) return 2000;
-
-      if (basePrice > 300000 && basePrice <= 500000) {
-        var m5 = Math.round(basePrice * 0.008);
-        return Math.min(m5, 4000);
-      }
-
-      if (basePrice > 500000 && basePrice <= 700000) {
-        var minPrice = 500000;
-        var maxPrice = 700000;
-        var minMarkup = 3500;
-        var maxMarkup = 6000;
-
-        var ratio = (basePrice - minPrice) / (maxPrice - minPrice);
-        var markup = minMarkup + ratio * (maxMarkup - minMarkup);
-        return Math.round(markup);
-      }
-
-      if (basePrice > 700000) {
-        return Math.round(basePrice * 0.0085);
-      }
-
-      return 0;
-    }
-
-    function calcFinalPrice(basePrice) {
-      return basePrice + calcMarkup(basePrice);
-    }
-
-    // BASE PRICELIST (KAMU)
+    // HEARTOPIA: TANPA RULES (HARGA SESUAI LIST)
     var PRODUCTS = [
-      { item: "20 Heart Diamonds", price: 8609 },
-      { item: "GAMG Junior Membership (7D)", price: 10287 },
-      { item: "60 Heart Diamonds", price: 18851 },
-      { item: "GAMG Full Membership (30D)", price: 57742 },
-      { item: "300 + 20 Heart Diamonds", price: 96324 },
-      { item: "680 + 50 Heart Diamonds", price: 215735 },
-      { item: "1280 + 90 Heart Diamonds", price: 392753 },
-      { item: "1980 + 150 Heart Diamonds", price: 597053 },
-      { item: "3280 + 270 Heart Diamonds", price: 971927 },
-      { item: "6480 + 570 Heart Diamonds", price: 1909907 }
+      { item: "20 Heart Diamonds", price: 9800, cat: "diamonds" },
+      { item: "60 Heart Diamonds", price: 20500, cat: "diamonds" },
+      { item: "300 + 20 Heart Diamonds", price: 96800, cat: "diamonds" },
+      { item: "680 + 50 Heart Diamonds", price: 218000, cat: "diamonds" },
+      { item: "1280 + 90 Heart Diamonds", price: 393000, cat: "diamonds" },
+      { item: "1980 + 150 Heart Diamonds", price: 597000, cat: "diamonds" },
+      { item: "3280 + 270 Heart Diamonds", price: 972000, cat: "diamonds" },
+      { item: "6480 + 570 Heart Diamonds", price: 1910000, cat: "diamonds" },
+
+      { item: "GAMG Junior Membership (7D)", price: 12800, cat: "membership" },
+      { item: "GAMG Full Membership (30D)", price: 59000, cat: "membership" }
     ];
 
     function createLi(product) {
-      var finalPrice = calcFinalPrice(product.price);
-
       var li = document.createElement("li");
       li.setAttribute("data-item", product.item);
-      li.setAttribute("data-base", String(product.price));
-      li.setAttribute("data-price", String(finalPrice));
+      li.setAttribute("data-price", String(product.price));
 
       li.innerHTML =
         '<span class="item-name">' + product.item + '</span>' +
-        '<span class="item-price">' + formatRupiah(finalPrice) + '</span>';
+        '<span class="item-price">' + formatRupiah(product.price) + '</span>';
 
       li.addEventListener("click", function () {
         selectProduct(product.item);
@@ -253,25 +213,32 @@
     }
 
     function renderAll() {
-      var listProducts = document.getElementById("listProducts");
+      var listDiamonds = document.getElementById("listDiamonds");
+      var listMembership = document.getElementById("listMembership");
       var select = document.getElementById("orderSelect");
 
-      if (!listProducts || !select) return;
+      if (!listDiamonds || !listMembership || !select) return;
 
-      listProducts.innerHTML = "";
+      listDiamonds.innerHTML = "";
+      listMembership.innerHTML = "";
       select.innerHTML = '<option value="" disabled selected>Pilih produk</option>';
 
       for (var i = 0; i < PRODUCTS.length; i++) {
         var p = PRODUCTS[i];
-        var finalPrice = calcFinalPrice(p.price);
 
         var opt = document.createElement("option");
         opt.value = p.item;
-        opt.setAttribute("data-price", String(finalPrice));
+        opt.setAttribute("data-price", String(p.price));
         opt.textContent = p.item;
         select.appendChild(opt);
 
-        listProducts.appendChild(createLi(p));
+        var li = createLi(p);
+
+        if (p.cat === "membership") {
+          listMembership.appendChild(li);
+        } else {
+          listDiamonds.appendChild(li);
+        }
       }
     }
 
