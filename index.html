@@ -146,8 +146,17 @@
       <div class="section-title">Form Order</div>
 
       <form id="orderForm" onsubmit="sendToWhatsApp(event)">
-        <label for="userId">User ID (Server):</label>
-        <input type="text" id="userId" placeholder="contoh: 12345678(1234)" required />
+        <label for="userId">User ID:</label>
+        <input type="text" id="userId" placeholder="contoh: 123456789" required />
+
+        <label for="server">Server:</label>
+        <select id="server" required>
+          <option value="" disabled selected>Pilih server</option>
+          <option value="SEA">SEA</option>
+          <option value="Asia">Asia</option>
+          <option value="HK/TW/MO">HK/TW/MO</option>
+          <option value="Global">Global</option>
+        </select>
 
         <label for="nickname">Nickname:</label>
         <input type="text" id="nickname" placeholder="nickname kamu" required />
@@ -179,20 +188,23 @@
       return 'Rp ' + numberString.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
     }
 
-    // HEARTOPIA: TANPA RULES (HARGA SESUAI LIST)
+    // HEARTOPIA: TANPA RULES (HARGA PERSIS SESUAI LIST)
     var PRODUCTS = [
-      { item: "20 Heart Diamonds", price: 9800, cat: "diamonds" },
-      { item: "60 Heart Diamonds", price: 20500, cat: "diamonds" },
-      { item: "300 + 20 Heart Diamonds", price: 96800, cat: "diamonds" },
-      { item: "680 + 50 Heart Diamonds", price: 218000, cat: "diamonds" },
-      { item: "1280 + 90 Heart Diamonds", price: 393000, cat: "diamonds" },
-      { item: "1980 + 150 Heart Diamonds", price: 597000, cat: "diamonds" },
-      { item: "3280 + 270 Heart Diamonds", price: 972000, cat: "diamonds" },
-      { item: "6480 + 570 Heart Diamonds", price: 1910000, cat: "diamonds" },
-
-      { item: "GAMG Junior Membership (7D)", price: 12800, cat: "membership" },
-      { item: "GAMG Full Membership (30D)", price: 59000, cat: "membership" }
+      { item: "20 Heart Diamonds", price: 9800 },
+      { item: "GAMG Junior Membership (7D)", price: 12800 },
+      { item: "60 Heart Diamonds", price: 20500 },
+      { item: "GAMG Full Membership (30D)", price: 59000 },
+      { item: "300 + 20 Heart Diamonds", price: 96800 },
+      { item: "680 + 50 Heart Diamonds", price: 218000 },
+      { item: "1280 + 90 Heart Diamonds", price: 393000 },
+      { item: "1980 + 150 Heart Diamonds", price: 597000 },
+      { item: "3280 + 270 Heart Diamonds", price: 972000 },
+      { item: "6480 + 570 Heart Diamonds", price: 1910000 }
     ];
+
+    function isMembership(name) {
+      return String(name || "").toLowerCase().indexOf("gamg") !== -1;
+    }
 
     function createLi(product) {
       var li = document.createElement("li");
@@ -234,7 +246,7 @@
 
         var li = createLi(p);
 
-        if (p.cat === "membership") {
+        if (isMembership(p.item)) {
           listMembership.appendChild(li);
         } else {
           listDiamonds.appendChild(li);
@@ -293,7 +305,9 @@
       e.preventDefault();
 
       var userId = document.getElementById("userId").value.trim();
+      var server = document.getElementById("server").value.trim();
       var nickname = document.getElementById("nickname").value.trim();
+
       var select = document.getElementById("orderSelect");
       var qty = document.getElementById("orderQty").value.trim();
       var price = document.getElementById("orderPrice").value.trim();
@@ -303,7 +317,8 @@
 
       var message =
         "**Order Heartopia Via UID**\n" +
-        "User ID (Server): " + userId + "\n" +
+        "User ID: " + userId + "\n" +
+        "Server: " + server + "\n" +
         "Nickname: " + nickname + "\n" +
         "Order: " + orderText + "\n" +
         "Jumlah: x" + qty + "\n" +
