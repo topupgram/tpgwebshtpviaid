@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pricelist Heartopia — Via UID</title>
+  <style>
+    body {
+      font-family: Roboto, sans-serif;
+      background: #C9DBF0;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 900px;
+      margin: auto;
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 8px;
+      font-size: 18px;
+    }
+    .subtitle {
+      text-align: center;
+      margin-bottom: 24px;
+      color: #555;
+      font-size: 12px;
+    }
+    .section-title {
+      font-size: 12px;
+      margin: 20px 0 10px;
+      border-bottom: 2px solid #eee;
+      padding-bottom: 6px;
+    }
+    ul.pricelist {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    ul.pricelist li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: #fafafa;
+      margin-bottom: 6px;
+      border: 1px solid #eee;
+      font-size: 10px;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.05s;
+    }
+    ul.pricelist li:nth-child(odd) {
+      background: #fefefe;
+    }
+    ul.pricelist li:hover {
+      background: #e9f3ff;
+      transform: translateY(-1px);
+    }
+    .item-name {
+      font-weight: 500;
+    }
+    .item-price {
+      font-weight: 600;
+      color: #007bff;
+      white-space: nowrap;
+    }
+
+    /* FORM ORDER */
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    form label {
+      font-size: 12px;
+      margin-top: 4px;
+    }
+    form input,
+    form select {
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid #dddddd;
+      font-size: 10px;
+    }
+    form button[type="submit"] {
+      margin-top: 10px;
+      padding: 10px 14px;
+      border: none;
+      border-radius: 999px;
+      font-weight: 600;
+      cursor: pointer;
+      background: #4E5E7D;
+      color: #ffffff;
+      font-size: 13px;
+    }
+
+    .qty-wrapper {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .qty-btn {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: 1px solid #cccccc;
+      background: #f5f5f5;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .qty-btn:active {
+      background: #e0e0e0;
+    }
+    #orderQty {
+      width: 48px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Heartopia — Via UID</h1>
+    <div class="subtitle">Klik produk untuk auto pilih di form</div>
+
+    <div class="section">
+      <div class="section-title">Heartopia Products</div>
+      <ul class="pricelist" id="listProducts"></ul>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Form Order</div>
+
+      <form id="orderForm" onsubmit="sendToWhatsApp(event)">
+        <label for="userId">User ID (Server):</label>
+        <input type="text" id="userId" placeholder="contoh: 12345678(1234)" required />
+
+        <label for="nickname">Nickname:</label>
+        <input type="text" id="nickname" placeholder="nickname kamu" required />
+
+        <label for="orderSelect">Order:</label>
+        <select id="orderSelect" required>
+          <option value="" disabled selected>Pilih produk</option>
+        </select>
+
+        <label>Jumlah order:</label>
+        <div class="qty-wrapper">
+          <button type="button" class="qty-btn" onclick="changeQty(-1)">−</button>
+          <input type="number" id="orderQty" value="1" min="1" readonly />
+          <button type="button" class="qty-btn" onclick="changeQty(1)">+</button>
+        </div>
+
+        <label for="orderPrice">Total Harga:</label>
+        <input type="text" id="orderPrice" placeholder="Rp 0" readonly />
+
+        <button type="submit">Kirim ke WhatsApp</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function formatRupiah(value) {
+      var numberString = String(value).replace(/[^0-9]/g, '');
+      if (!numberString) return '';
+      return 'Rp ' + numberString.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    }
+
+    // RULES MARKUP (UPDATED)
+    function calcMarkup(basePrice) {
+      if (basePrice > 0 && basePrice < 16000) return 800;
+
+      if (basePrice >= 16000 && basePrice <= 50000) {
+        var m2 = Math.round(basePrice * 0.05);
+        return Math.min(m2, 1200);
+      }
+
+      if (basePrice > 50000 && basePrice <= 140000) {
+        var m3 = Math.round(basePrice * 0.033);
+        return Math.min(m3, 2000);
+      }
+
+      if (basePrice > 140000 && basePrice <= 300000) return 2000;
+
+      if (basePrice > 300000 && basePrice <= 500000) {
+        var m5 = Math.round(basePrice * 0.008);
+        return Math.min(m5, 4000);
+      }
+
+      if (basePrice > 500000 && basePrice <= 700000) {
+        var minPrice = 500000;
+        var maxPrice = 700000;
+        var minMarkup = 3500;
+        var maxMarkup = 6000;
+
+        var ratio = (basePrice - minPrice) / (maxPrice - minPrice);
+        var markup = minMarkup + ratio * (maxMarkup - minMarkup);
+        return Math.round(markup);
+      }
+
+      if (basePrice > 700000) {
+        return Math.round(basePrice * 0.0085);
+      }
+
+      return 0;
+    }
+
+    function calcFinalPrice(basePrice) {
+      return basePrice + calcMarkup(basePrice);
+    }
+
+    // BASE PRICELIST (KAMU)
+    var PRODUCTS = [
+      { item: "20 Heart Diamonds", price: 8609 },
+      { item: "GAMG Junior Membership (7D)", price: 10287 },
+      { item: "60 Heart Diamonds", price: 18851 },
+      { item: "GAMG Full Membership (30D)", price: 57742 },
+      { item: "300 + 20 Heart Diamonds", price: 96324 },
+      { item: "680 + 50 Heart Diamonds", price: 215735 },
+      { item: "1280 + 90 Heart Diamonds", price: 392753 },
+      { item: "1980 + 150 Heart Diamonds", price: 597053 },
+      { item: "3280 + 270 Heart Diamonds", price: 971927 },
+      { item: "6480 + 570 Heart Diamonds", price: 1909907 }
+    ];
+
+    function createLi(product) {
+      var finalPrice = calcFinalPrice(product.price);
+
+      var li = document.createElement("li");
+      li.setAttribute("data-item", product.item);
+      li.setAttribute("data-base", String(product.price));
+      li.setAttribute("data-price", String(finalPrice));
+
+      li.innerHTML =
+        '<span class="item-name">' + product.item + '</span>' +
+        '<span class="item-price">' + formatRupiah(finalPrice) + '</span>';
+
+      li.addEventListener("click", function () {
+        selectProduct(product.item);
+        var form = document.getElementById("orderForm");
+        if (form) form.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+
+      return li;
+    }
+
+    function renderAll() {
+      var listProducts = document.getElementById("listProducts");
+      var select = document.getElementById("orderSelect");
+
+      if (!listProducts || !select) return;
+
+      listProducts.innerHTML = "";
+      select.innerHTML = '<option value="" disabled selected>Pilih produk</option>';
+
+      for (var i = 0; i < PRODUCTS.length; i++) {
+        var p = PRODUCTS[i];
+        var finalPrice = calcFinalPrice(p.price);
+
+        var opt = document.createElement("option");
+        opt.value = p.item;
+        opt.setAttribute("data-price", String(finalPrice));
+        opt.textContent = p.item;
+        select.appendChild(opt);
+
+        listProducts.appendChild(createLi(p));
+      }
+    }
+
+    function selectProduct(item) {
+      var select = document.getElementById("orderSelect");
+      var qtyInput = document.getElementById("orderQty");
+      if (!select) return;
+
+      for (var i = 0; i < select.options.length; i++) {
+        if (select.options[i].value === item) {
+          select.selectedIndex = i;
+          break;
+        }
+      }
+
+      if (qtyInput) qtyInput.value = 1;
+      updateTotal();
+    }
+
+    function updateTotal() {
+      var select = document.getElementById("orderSelect");
+      var qtyInput = document.getElementById("orderQty");
+      var priceInput = document.getElementById("orderPrice");
+      if (!select || !qtyInput || !priceInput) return;
+
+      var option = select.options[select.selectedIndex];
+      if (!option || !option.getAttribute("data-price")) {
+        priceInput.value = "";
+        return;
+      }
+
+      var unitPrice = parseInt(option.getAttribute("data-price"), 10) || 0;
+      var qty = parseInt(qtyInput.value, 10) || 1;
+
+      var total = unitPrice * qty;
+      priceInput.value = formatRupiah(total);
+    }
+
+    function changeQty(delta) {
+      var qtyInput = document.getElementById("orderQty");
+      if (!qtyInput) return;
+
+      var current = parseInt(qtyInput.value, 10) || 1;
+      current += delta;
+      if (current < 1) current = 1;
+
+      qtyInput.value = current;
+      updateTotal();
+    }
+
+    function sendToWhatsApp(e) {
+      e.preventDefault();
+
+      var userId = document.getElementById("userId").value.trim();
+      var nickname = document.getElementById("nickname").value.trim();
+      var select = document.getElementById("orderSelect");
+      var qty = document.getElementById("orderQty").value.trim();
+      var price = document.getElementById("orderPrice").value.trim();
+
+      var orderText = "";
+      if (select && select.value) orderText = select.value;
+
+      var message =
+        "**Order Heartopia Via UID**\n" +
+        "User ID (Server): " + userId + "\n" +
+        "Nickname: " + nickname + "\n" +
+        "Order: " + orderText + "\n" +
+        "Jumlah: x" + qty + "\n" +
+        "Total Harga: " + price;
+
+      var phone = "6283197962700";
+      var url = "https://wa.me/" + phone + "?text=" + encodeURIComponent(message);
+      window.open(url, "_blank");
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      renderAll();
+
+      var select = document.getElementById("orderSelect");
+      if (select) select.addEventListener("change", updateTotal);
+
+      updateTotal();
+    });
+  </script>
+</body>
+</html>
